@@ -119,11 +119,12 @@ def upload(ctx: click.Context, file_path: Path, expiry: str | None) -> None:
     share_id = result["share_id"]
     download_url = f"{base}/links/{link_id}/download"
     console.print(f"[green]Uploaded {file_path.name}[/green]")
-    console.print(f"  Download URL: {download_url}")
+    console.print(f"  Download URL: {download_url}", no_wrap=True)
     console.print(
-        f"  curl: curl -o {shlex.quote(str(file_path.name))} '{download_url}'"
+        f"  curl: curl -o {shlex.quote(str(file_path.name))} '{download_url}'",
+        no_wrap=True,
     )
-    console.print(f"  Delete: homeshare delete {share_id}")
+    console.print(f"  Delete: homeshare delete {share_id}", no_wrap=True)
 
 
 @cli.command(help="Delete a share or link by ID.")
