@@ -56,7 +56,10 @@ def load_config() -> AppConfig:
     path = get_config_path()
     if not path.exists():
         return AppConfig()
-    return _parse_config(path.read_text())
+    try:
+        return _parse_config(path.read_text())
+    except Exception as e:
+        raise ValueError(f"Failed to parse config file {path}: {e}") from e
 
 
 def resolve_server_name(server_name: str | None) -> tuple[AppConfig, ServerConfig]:
