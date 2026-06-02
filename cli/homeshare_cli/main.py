@@ -64,7 +64,7 @@ def cli(ctx: click.Context, server: str | None) -> None:
 def login(server_url: str, server_name: str) -> None:
     cfg = load_config()
     token = click.prompt(
-        f"Paste your API token (created at {server_url}/account)",
+        f"Paste your API token (created at {server_url}/account )",
         hide_input=sys.stdin.isatty(),
     )
     client = HomeshareClient(base_url=server_url, token=token)
