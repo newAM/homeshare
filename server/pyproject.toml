@@ -1,0 +1,46 @@
+[project]
+name = "homeshare-server"
+version = "0.1.0"
+description = "A simple file sharing service for home servers"
+readme = "README.md"
+authors = [{ name = "Alex Martens", email = "alex@thinglab.org" }]
+requires-python = ">=3.13"
+license = "AGPL-3.0-or-later"
+dependencies = [
+  "authlib",
+  "flask-migrate",
+  "flask-sqlalchemy",
+  "flask",
+  "flask-session",
+  "flask-wtf",
+  "homeshare-common",
+  "requests",
+  "systemd-python",
+]
+
+[project.urls]
+Repository = "https://github.com/newAM/homeshare"
+Changelog = "https://github.com/newAM/homeshare/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["homeshare*"]
+
+[tool.setuptools.package-data]
+homeshare = ["templates/*.html", "static/*"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+  "ignore:datetime.datetime.utcnow\\(\\) is deprecated:DeprecationWarning:flask_session.sqlalchemy.sqlalchemy",
+]
+
+[tool.uv.sources]
+homeshare-common.path = "../lib"
+
+[dependency-groups]
+dev = ["pytest-cov", "pytest-flask", "pytest", "ruff", "ty"]

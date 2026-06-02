@@ -1,0 +1,6 @@
+{% extends "base.html" %} {% block title %}Error {{ code }} - Homeshare{%
+endblock %} {% block content %}
+<h1>{{ code }}</h1>
+<p>{{ message }}</p>
+<p><a href="{{ url_for('web.index') }}">Back to home</a></p>
+{% endblock %}

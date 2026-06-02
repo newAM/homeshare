@@ -1,0 +1,35 @@
+[project]
+name = "homeshare-cli"
+version = "0.1.0"
+description = "CLI client for homeshare"
+requires-python = ">=3.13"
+license = "AGPL-3.0-or-later"
+dependencies = [
+  "click>=8",
+  "homeshare-common",
+  "keyring",
+  "platformdirs",
+  "requests",
+  "rich",
+  "tomli-w",
+]
+
+[project.urls]
+Repository = "https://github.com/newAM/homeshare"
+Changelog = "https://github.com/newAM/homeshare/blob/main/CHANGELOG.md"
+
+[project.scripts]
+homeshare = "homeshare_cli.main:cli"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv.sources]
+homeshare-common.path = "../lib"
+
+[dependency-groups]
+dev = ["pytest-cov", "pytest", "responses", "ruff", "ty"]

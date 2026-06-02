@@ -1,0 +1,28 @@
+[lint]
+extend-select = [
+  # flake8-builtins
+  "A",
+  # flake8-unused-arguments
+  "ARG",
+  # flake8-bugbear
+  "B",
+  # flake8-comprehensions
+  "C4",
+  # pep8-naming
+  "N",
+  # perflint
+  "PERF",
+  # flake8-pie
+  "PIE",
+  # flake8-use-pathlib
+  "PTH",
+  # All Ruff specific rules
+  # This may be too broad, if it needs to be reduced keep these at a minimum:
+  # - RUF059: unused-unpacked-variable
+  # - RUF100: unused-noqa
+  "RUF",
+  # flake8-simplify
+  "SIM",
+  # pyupgrade
+  "UP",
+]

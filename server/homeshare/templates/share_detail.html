@@ -1,0 +1,97 @@
+{% extends "base.html" %} {% block title %}{{ share.filename }} - Homeshare{%
+endblock %} {% block content %}
+<h1>{{ share.filename }}</h1>
+<p>
+  Uploaded
+  <time datetime="{{ to_isoformat(share.created_at) }}"
+    >{{ format_created_at(share.created_at) }}</time
+  >
+</p>
+
+<h2>Links</h2>
+{% if links %}
+<table>
+  <thead>
+    <tr>
+      <th>Label</th>
+      <th>Link</th>
+      <th>Created</th>
+      <th>Expires</th>
+      <th>Downloads</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for link in links %}
+    <tr>
+      <td>{{ link.label or "-" }}</td>
+      <td>
+        <a href="{{ url_for('web.download', link_id=link.link_id) }}"
+          >{{ link.link_id.hex[:8] }}</a
+        >
+      </td>
+      <td>
+        <time datetime="{{ to_isoformat(link.created_at) }}"
+          >{{ format_created_at(link.created_at) }}</time
+        >
+      </td>
+      <td class="{% if link.is_expired %}expired{% endif %}">
+        {% if link.expires_at %}
+        <time datetime="{{ to_isoformat(link.expires_at) }}"
+          >{{ format_created_at(link.expires_at) }}</time
+        >
+        {% if link.is_expired %} (expired){% endif %} {% else %} Never {% endif
+        %}
+      </td>
+      <td>{{ link.download_count }}</td>
+      <td>
+        <form
+          method="post"
+          action="{{ url_for('web.delete_link', link_id=link.link_id) }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="_method" value="DELETE" />
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No links.</p>
+{% endif %}
+
+<h2>Create link</h2>
+<form
+  method="post"
+  action="{{ url_for('web.create_link_route', share_id=share.share_id) }}"
+>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <p>
+    <label for="label">Label (optional)</label><br />
+    <input type="text" id="label" name="label" style="width: 20em" />
+  </p>
+  <p>
+    <label for="expires_in"
+      >Expires after (optional, e.g. "30 days", "1 year")</label
+    ><br />
+    <input type="text" id="expires_in" name="expires_in" style="width: 14em" />
+  </p>
+  <p>
+    <button type="submit">Create link</button>
+  </p>
+</form>
+
+<h2>Delete file</h2>
+<form
+  method="post"
+  action="{{ url_for('web.delete_share', share_id=share.share_id) }}"
+>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <input type="hidden" name="_method" value="DELETE" />
+  <button type="submit">Delete file and all links</button>
+</form>
+
+<p><a href="{{ url_for('web.index') }}">Back to home</a></p>
+{% endblock %}

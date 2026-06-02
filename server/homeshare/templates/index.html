@@ -1,0 +1,67 @@
+{% extends "base.html" %} {% block title %}Homeshare{% endblock %} {% block
+content %}
+<h1>Upload a file</h1>
+<form
+  method="post"
+  action="{{ url_for('web.upload') }}"
+  enctype="multipart/form-data"
+>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <p>
+    <label for="file">File</label><br />
+    <input type="file" id="file" name="file" required />
+  </p>
+  <p>
+    <label for="expires_in"
+      >Default link expires after (optional, e.g. "7 days", "2h30m",
+      "never")</label
+    ><br />
+    <input type="text" id="expires_in" name="expires_in" style="width: 14em" />
+  </p>
+  <p>
+    <button type="submit">Upload</button>
+  </p>
+</form>
+
+<h2>Your files</h2>
+{% if shares %}
+<table>
+  <thead>
+    <tr>
+      <th>Filename</th>
+      <th>Links</th>
+      <th>Uploaded</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for share in shares %}
+    <tr>
+      <td>
+        <a href="{{ url_for('web.share_detail', share_id=share.share_id) }}"
+          >{{ share.filename }}</a
+        >
+      </td>
+      <td>{{ share.links | length }}</td>
+      <td>
+        <time datetime="{{ to_isoformat(share.created_at) }}"
+          >{{ format_created_at(share.created_at) }}</time
+        >
+      </td>
+      <td>
+        <form
+          method="post"
+          action="{{ url_for('web.delete_share', share_id=share.share_id) }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="_method" value="DELETE" />
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No files yet.</p>
+{% endif %} {% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %} {% block title %}Account - Homeshare{% endblock %} {%
+block content %}
+<h1>Account</h1>
+
+<p>
+  Signed in as
+  <strong>{{ user.name or user.email or user.sub }}</strong>
+</p>
+{% if user.roles %}
+<p>Roles: {{ user.roles | join(', ') }}</p>
+{% endif %}
+
+<h2>API Tokens</h2>
+
+{% if new_token %}
+<div
+  style="
+    background: #f0f0f0;
+    padding: 1em;
+    margin-bottom: 1em;
+    border: 2px solid #333;
+  "
+>
+  <p>
+    <strong>{{ new_token_name }}</strong> token created. Copy it now; it won't
+    be shown again.
+  </p>
+  <code>{{ new_token }}</code>
+</div>
+{% endif %}
+
+<h2>Create Token</h2>
+<form method="post" action="{{ url_for('web.create_token') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <p>
+    <label for="name">Name</label><br />
+    <input type="text" id="name" name="name" required style="width: 20em" />
+  </p>
+  <p>
+    <label for="expires_in"
+      >Expires after (optional, e.g. "30 days", "1 year")</label
+    ><br />
+    <input type="text" id="expires_in" name="expires_in" style="width: 14em" />
+  </p>
+  <p>
+    <button type="submit">Create</button>
+  </p>
+</form>
+
+<h2>Your Tokens</h2>
+{% if tokens %}
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Created</th>
+      <th>Expires</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for token in tokens %}
+    <tr>
+      <td>{{ token.name }}</td>
+      <td>
+        <time datetime="{{ to_isoformat(token.created_at) }}"
+          >{{ format_created_at(token.created_at) }}</time
+        >
+      </td>
+      <td class="{% if token.is_expired %}expired{% endif %}">
+        {% if token.expires_at %}
+        <time datetime="{{ to_isoformat(token.expires_at) }}"
+          >{{ format_created_at(token.expires_at) }}</time
+        >
+        {% if token.is_expired %} (expired){% endif %} {% else %} Never {% endif
+        %}
+      </td>
+      <td>
+        <form
+          method="post"
+          action="{{ url_for('web.delete_token', token_id=token.id) }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="_method" value="DELETE" />
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No tokens yet.</p>
+{% endif %} {% endblock %}
