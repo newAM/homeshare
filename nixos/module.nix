@@ -163,6 +163,12 @@ in {
 
     users.groups.${cfg.group} = lib.mkIf (cfg.group == "homeshare") {};
 
+    systemd.tmpfiles.settings."10-homeshare"."${cfg.settings.UPLOAD_DIR}".d = {
+      group = cfg.group;
+      mode = "0750";
+      user = cfg.user;
+    };
+
     systemd.sockets.homeshare = {
       description = "Homeshare file sharing service socket";
       wantedBy = ["sockets.target"];

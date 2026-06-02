@@ -114,9 +114,6 @@ in
           echo test-secret-key-do-not-use-in-production > ${SECRET_KEY_FILE}
           chmod 600 ${SECRET_KEY_FILE}
           chown homeshare:homeshare ${SECRET_KEY_FILE}
-
-          mkdir -p /var/lib/homeshare/uploads
-          chown homeshare:homeshare -R /var/lib/homeshare/uploads
         '';
         serviceConfig = {
           Type = "oneshot";
