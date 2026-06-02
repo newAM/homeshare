@@ -84,10 +84,11 @@ def create_app(config: Config | None = None) -> Flask:
         # Prevent browsers and proxies from caching any responses.
         # This is important for API tokens that should be shown only once.
         response.headers["Cache-Control"] = "no-store"
-        # Suppress the Referer header on all navigations so that share UUIDs
-        # and other page URLs are not leaked to third-party sites such as the
-        # GitHub source code link.
-        response.headers["Referrer-Policy"] = "no-referrer"
+        # Allow the Referer header for same-origin navigations so that
+        # Flask-WTF's CSRF referer check can validate form submissions,
+        # while still preventing share UUIDs and other page URLs from
+        # leaking to third-party sites.
+        response.headers["Referrer-Policy"] = "same-origin"
         # Deny access to unused sensitive browser APIs,
         # limiting the impact of any XSS vulnerability.
         response.headers["Permissions-Policy"] = (

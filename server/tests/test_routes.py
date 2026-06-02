@@ -67,7 +67,7 @@ def test_index_authenticated_shows_upload_form(authed_client: FlaskClient) -> No
     )
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["Cache-Control"] == "no-store"
-    assert response.headers["Referrer-Policy"] == "no-referrer"
+    assert response.headers["Referrer-Policy"] == "same-origin"
     assert response.headers["Permissions-Policy"] == (
         "camera=(), microphone=(), geolocation=(), payment=()"
     )
