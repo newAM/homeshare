@@ -20,7 +20,6 @@ in
 
     dependencies = with python3Packages; [
       click
-      keyring
       platformdirs
       requests
       rich

@@ -123,15 +123,7 @@ in
 
       environment.systemPackages = with pkgs; [
         htmlq
-        (symlinkJoin {
-          name = "homeshare-cli-wrapped";
-          paths = [homeshare-cli];
-          nativeBuildInputs = [makeWrapper];
-          postBuild = ''
-            wrapProgram $out/bin/homeshare \
-              --prefix PYTHONPATH : ${python3Packages.keyrings-alt}/${python3.sitePackages}
-          '';
-        })
+        homeshare-cli
       ];
     };
 
@@ -382,7 +374,7 @@ in
         assert status == "401", f"expected 401 with deleted token, got: {status}"
 
       # --- CLI tests ---
-      cli_env = "KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring XDG_CONFIG_HOME=/tmp/cli-config REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt COLUMNS=999"
+      cli_env = "XDG_CONFIG_HOME=/tmp/cli-config REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt COLUMNS=999"
 
       # create a new API token for CLI use
       with subtest("Create API token for CLI"):
@@ -397,12 +389,17 @@ in
         ).rstrip()
         assert cli_api_token.startswith("hs_"), f"unexpected token: {cli_api_token!r}"
 
-      with subtest("CLI login"):
+      with subtest("CLI config setup"):
+        machine.execute("mkdir -p /tmp/cli-config/homeshare")
+        machine.succeed(f"echo '{cli_api_token}' > /tmp/cli-config/homeshare/token")
+        machine.succeed("chmod 600 /tmp/cli-config/homeshare/token")
         machine.succeed(
-          f"{cli_env} sh -c \"echo '{cli_api_token}' | homeshare login ${homeshareUrl} mysrv\"",
+          "cat > /tmp/cli-config/homeshare/config.toml <<EOF\n"
+          "[servers.mysrv]\n"
+          "url = \"${homeshareUrl}\"\n"
+          "token_file = \"/tmp/cli-config/homeshare/token\"\n"
+          "EOF\n"
         )
-        config_content = machine.succeed("cat /tmp/cli-config/homeshare/config.toml")
-        assert "mysrv" in config_content, "server not in config"
 
       with subtest("CLI upload"):
         machine.succeed("echo 'cli upload test' > /tmp/cli_upload.txt")
@@ -432,12 +429,6 @@ in
           f"{cli_env} homeshare delete {cli_share_id}",
         )
         assert f"Deleted share {cli_share_id}" in del_out, f"unexpected delete output: {del_out}"
-
-      with subtest("CLI logout"):
-        logout_out = machine.succeed(
-          f"{cli_env} homeshare logout",
-        )
-        assert "Logged out" in logout_out, f"unexpected logout output: {logout_out}"
 
       with subtest("Logout"):
         csrf_logout: str = get_csrf("/")

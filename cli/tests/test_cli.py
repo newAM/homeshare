@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import patch
 
 import click.testing
 import pytest
@@ -18,142 +16,17 @@ def runner(tmp_path: Path) -> click.testing.CliRunner:
     return click.testing.CliRunner(env={"XDG_CONFIG_HOME": str(tmp_path)})
 
 
-@pytest.fixture()
-def mock_keyring() -> Generator[dict[str, str], None, None]:
-    store: dict[str, str] = {}
-
-    def get_password(_service: str, username: str) -> str | None:
-        return store.get(username)
-
-    def set_password(_service: str, username: str, password: str) -> None:
-        store[username] = password
-
-    def delete_password(_service: str, username: str) -> None:
-        store.pop(username, None)
-
-    with (
-        patch("homeshare_cli.config.keyring.get_password", side_effect=get_password),
-        patch("homeshare_cli.config.keyring.set_password", side_effect=set_password),
-        patch(
-            "homeshare_cli.config.keyring.delete_password", side_effect=delete_password
-        ),
-    ):
-        yield store
-
-
 BASE_URL = "https://homeshare.example.com"
 
 
-class TestLogin:
-    def test_success(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-    ) -> None:
-        with responses.RequestsMock() as rsps:
-            rsps.add(responses.GET, f"{BASE_URL}/api/me", json={"sub": "u"}, status=200)
-            result = runner.invoke(
-                cli, ["login", BASE_URL, "mysrv"], input="hs_testtoken\n"
-            )
-        assert result.exit_code == 0, result.output
-        assert "Logged in" in result.output
-        assert mock_keyring.get("mysrv") == "hs_testtoken"
-
-    def test_invalid_token(
-        self,
-        runner: click.testing.CliRunner,
-    ) -> None:
-        with responses.RequestsMock() as rsps:
-            rsps.add(
-                responses.GET,
-                f"{BASE_URL}/api/me",
-                json={"error": "unauthorized"},
-                status=401,
-            )
-            result = runner.invoke(cli, ["login", BASE_URL, "mysrv"], input="hs_bad\n")
-        assert result.exit_code == 1, result.output
-        assert "failed" in result.output.lower()
-
-    def test_overwrites_existing_server(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": "https://old.example.com"}))
-        mock_keyring["mysrv"] = "hs_oldtoken"
-        new_url = "https://new.example.com"
-        with responses.RequestsMock() as rsps:
-            rsps.add(responses.GET, f"{new_url}/api/me", json={"sub": "u"}, status=200)
-            result = runner.invoke(
-                cli, ["login", new_url, "mysrv"], input="hs_newtoken\n"
-            )
-        assert result.exit_code == 0, result.output
-        assert mock_keyring.get("mysrv") == "hs_newtoken"
-
-
-class TestLogout:
-    def test_single_server(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
-        result = runner.invoke(cli, ["logout"])
-        assert result.exit_code == 0, result.output
-        assert "Logged out" in result.output
-        assert "mysrv" not in mock_keyring
-
-    def test_named_server(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(
-            tmp_path,
-            make_config({"srv1": BASE_URL, "srv2": "https://other.example.com"}),
-        )
-        mock_keyring["srv1"] = "hs_t1"
-        mock_keyring["srv2"] = "hs_t2"
-        result = runner.invoke(cli, ["--server", "srv1", "logout"])
-        assert result.exit_code == 0, result.output
-        assert "srv1" not in mock_keyring
-
-    def test_no_servers(
-        self,
-        runner: click.testing.CliRunner,
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({}))
-        result = runner.invoke(cli, ["logout"])
-        assert result.exit_code != 0
-
-    def test_no_token_in_keyring(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],  # noqa: ARG002 - activates keyring patch
-        tmp_path: Path,
-    ) -> None:
-        # Token absent from keyring: logout should still succeed and remove the
-        # server from config (delete_token silently ignores PasswordDeleteError).
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        result = runner.invoke(cli, ["logout"])
-        assert result.exit_code == 0, result.output
-        assert "Logged out" in result.output
+def _setup_server(tmp_path: Path, name: str = "mysrv", url: str = BASE_URL) -> None:
+    cfg = make_config({name: url}, token_dir=tmp_path)
+    write_config(tmp_path, cfg)
 
 
 class TestUpload:
-    def test_success(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+    def test_success(self, runner: click.testing.CliRunner, tmp_path: Path) -> None:
+        _setup_server(tmp_path)
         f = tmp_path / "test.txt"
         f.write_text("hello")
         expected = {"share_id": "abc-123", "link_id": "def-456"}
@@ -167,14 +40,8 @@ class TestUpload:
         assert "/links/def-456/download" in result.output
         assert "homeshare delete abc-123" in result.output
 
-    def test_with_expiry(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+    def test_with_expiry(self, runner: click.testing.CliRunner, tmp_path: Path) -> None:
+        _setup_server(tmp_path)
         f = tmp_path / "test.txt"
         f.write_text("hello")
         with responses.RequestsMock() as rsps:
@@ -188,25 +55,19 @@ class TestUpload:
         assert result.exit_code == 0, result.output
 
     def test_invalid_expiry(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
+        self, runner: click.testing.CliRunner, tmp_path: Path
     ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+        _setup_server(tmp_path)
         f = tmp_path / "test.txt"
         f.write_text("hello")
         result = runner.invoke(cli, ["upload", str(f), "--expiry", "banana"])
         assert result.exit_code != 0
         assert "invalid expiry" in result.output.lower()
 
-    def test_no_token(
-        self,
-        runner: click.testing.CliRunner,
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
+    def test_no_token(self, runner: click.testing.CliRunner, tmp_path: Path) -> None:
+        cfg = make_config({"mysrv": BASE_URL}, token_dir=tmp_path)
+        cfg.servers["mysrv"].token_file = tmp_path / "nonexistent"
+        write_config(tmp_path, cfg)
         f = tmp_path / "test.txt"
         f.write_text("hello")
         result = runner.invoke(cli, ["upload", str(f)])
@@ -215,13 +76,9 @@ class TestUpload:
 
 class TestDelete:
     def test_delete_share(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
+        self, runner: click.testing.CliRunner, tmp_path: Path
     ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+        _setup_server(tmp_path)
         with responses.RequestsMock() as rsps:
             rsps.add(
                 responses.DELETE,
@@ -234,13 +91,9 @@ class TestDelete:
         assert "Deleted share 1" in result.output
 
     def test_delete_link_fallback(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
+        self, runner: click.testing.CliRunner, tmp_path: Path
     ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+        _setup_server(tmp_path)
         with responses.RequestsMock() as rsps:
             rsps.add(
                 responses.DELETE,
@@ -258,14 +111,8 @@ class TestDelete:
         assert result.exit_code == 0, result.output
         assert "Deleted link abc" in result.output
 
-    def test_not_found(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+    def test_not_found(self, runner: click.testing.CliRunner, tmp_path: Path) -> None:
+        _setup_server(tmp_path)
         with responses.RequestsMock() as rsps:
             rsps.add(
                 responses.DELETE,
@@ -284,13 +131,9 @@ class TestDelete:
         assert "not found" in result.output
 
     def test_server_error(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
+        self, runner: click.testing.CliRunner, tmp_path: Path
     ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+        _setup_server(tmp_path)
         with responses.RequestsMock() as rsps:
             rsps.add(
                 responses.DELETE,
@@ -304,14 +147,8 @@ class TestDelete:
 
 
 class TestList:
-    def test_success(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+    def test_success(self, runner: click.testing.CliRunner, tmp_path: Path) -> None:
+        _setup_server(tmp_path)
         shares = [
             {
                 "share_id": "1",
@@ -326,14 +163,8 @@ class TestList:
         assert result.exit_code == 0, result.output
         assert "a.txt" in result.output
 
-    def test_empty(
-        self,
-        runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
-        tmp_path: Path,
-    ) -> None:
-        write_config(tmp_path, make_config({"mysrv": BASE_URL}))
-        mock_keyring["mysrv"] = "hs_token"
+    def test_empty(self, runner: click.testing.CliRunner, tmp_path: Path) -> None:
+        _setup_server(tmp_path)
         with responses.RequestsMock() as rsps:
             rsps.add(responses.GET, f"{BASE_URL}/api/shares", json=[], status=200)
             result = runner.invoke(cli, ["list"])
@@ -384,36 +215,6 @@ class TestTokenFile:
         assert get_token(srv) == "hs_filetoken"
         assert capsys.readouterr().err == ""
 
-    def test_get_token_falls_back_to_keyring(self) -> None:
-        from homeshare_cli.config import ServerConfig, get_token
-
-        srv = ServerConfig(name="srv", url="https://example.com")
-        with patch(
-            "homeshare_cli.config.keyring.get_password", return_value="hs_kr"
-        ) as mock_get:
-            result = get_token(srv)
-        mock_get.assert_called_once_with("homeshare", "srv")
-        assert result == "hs_kr"
-
-    def test_set_token_noop_when_token_file_set(self, tmp_path: Path) -> None:
-        from homeshare_cli.config import ServerConfig, set_token
-
-        srv = ServerConfig(
-            name="srv", url="https://example.com", token_file=tmp_path / "token"
-        )
-        with patch("homeshare_cli.config.keyring.set_password") as mock_set:
-            set_token(srv, "hs_tok")
-        mock_set.assert_not_called()
-
-    def test_delete_token_raises_when_token_file_set(self, tmp_path: Path) -> None:
-        from homeshare_cli.config import ServerConfig, delete_token
-
-        srv = ServerConfig(
-            name="srv", url="https://example.com", token_file=tmp_path / "token"
-        )
-        with pytest.raises(ValueError, match="token file"):
-            delete_token(srv)
-
     def test_upload_with_token_file(
         self,
         runner: click.testing.CliRunner,
@@ -422,7 +223,7 @@ class TestTokenFile:
         token_file = tmp_path / "mytoken"
         token_file.write_text("hs_filetoken\n")
         token_file.chmod(0o600)
-        cfg = make_config({"mysrv": BASE_URL})
+        cfg = make_config({"mysrv": BASE_URL}, token_dir=tmp_path)
         cfg.servers["mysrv"].token_file = token_file
         write_config(tmp_path, cfg)
         f = tmp_path / "upload.txt"
@@ -443,7 +244,7 @@ class TestTokenFile:
         runner: click.testing.CliRunner,
         tmp_path: Path,
     ) -> None:
-        cfg = make_config({"mysrv": BASE_URL})
+        cfg = make_config({"mysrv": BASE_URL}, token_dir=tmp_path)
         cfg.servers["mysrv"].token_file = tmp_path / "nonexistent"
         write_config(tmp_path, cfg)
         f = tmp_path / "upload.txt"
@@ -452,42 +253,33 @@ class TestTokenFile:
         assert result.exit_code != 0
         assert "Cannot read token file" in result.output
 
-    def test_logout_raises_for_token_file_server(
-        self,
-        runner: click.testing.CliRunner,
-        tmp_path: Path,
-    ) -> None:
-        token_file = tmp_path / "mytoken"
-        token_file.write_text("hs_filetoken\n")
-        cfg = make_config({"mysrv": BASE_URL})
-        cfg.servers["mysrv"].token_file = token_file
-        write_config(tmp_path, cfg)
-        result = runner.invoke(cli, ["logout"])
-        assert result.exit_code != 0
-        assert "token file" in result.output.lower()
+    def test_config_missing_token_file_raises(self) -> None:
+        from homeshare_cli.config import _parse_config
+
+        toml_text = """
+[servers.mysrv]
+url = "https://example.com"
+"""
+        with pytest.raises(ValueError, match="missing required 'token_file'"):
+            _parse_config(toml_text)
 
     def test_multiple_servers_requires_flag(
         self,
         runner: click.testing.CliRunner,
-        mock_keyring: dict[str, str],
         tmp_path: Path,
     ) -> None:
-        write_config(
-            tmp_path,
-            make_config({"srv1": BASE_URL, "srv2": "https://other.example.com"}),
+        cfg = make_config(
+            {"srv1": BASE_URL, "srv2": "https://other.example.com"},
+            token_dir=tmp_path,
         )
-        mock_keyring["srv1"] = "hs_t1"
-        mock_keyring["srv2"] = "hs_t2"
+        write_config(tmp_path, cfg)
         result = runner.invoke(cli, ["list"])
         assert result.exit_code != 0
         assert (
             "multiple servers" in result.output.lower() or "--server" in result.output
         )
 
-    def test_no_servers(
-        self,
-        runner: click.testing.CliRunner,
-    ) -> None:
+    def test_no_servers(self, runner: click.testing.CliRunner) -> None:
         result = runner.invoke(cli, ["list"])
         assert result.exit_code != 0
-        assert "no servers" in result.output.lower() or "login" in result.output.lower()
+        assert "no servers" in result.output.lower()

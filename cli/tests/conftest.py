@@ -6,10 +6,17 @@ from unittest.mock import patch
 from homeshare_cli.config import AppConfig, ServerConfig, save_config
 
 
-def make_config(servers: dict[str, str] | None = None) -> AppConfig:
+def make_config(
+    servers: dict[str, str] | None = None,
+    token_dir: Path | None = None,
+) -> AppConfig:
     cfg = AppConfig()
     for name, url in (servers or {}).items():
-        cfg.servers[name] = ServerConfig(name=name, url=url)
+        assert token_dir is not None, "token_dir is required when servers are provided"
+        token_file = token_dir / f"{name}.token"
+        token_file.write_text(f"hs_{name}_token\n")
+        token_file.chmod(0o600)
+        cfg.servers[name] = ServerConfig(name=name, url=url, token_file=token_file)
     return cfg
 
 

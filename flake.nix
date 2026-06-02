@@ -105,7 +105,6 @@
             flask-session
             flask-sqlalchemy
             flask-wtf
-            keyring
             platformdirs
             pytest
             pytest-cov

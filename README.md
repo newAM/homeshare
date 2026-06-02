@@ -204,30 +204,25 @@ in {
 The `homeshare-cli` package provides a command-line client for uploading files.
 
 The CLI stores its configuration at `~/.config/homeshare/config.toml`.
-Tokens are stored in the system keyring by default.
 
-### Login
+### Configuration
+
+Create an API token from the web UI under **Account** -> **API tokens**.
+
+Write the token to the file and restrict permissions:
 
 ```bash
-homeshare login https://homeshare.example.com myserver
+echo "hs_your_token_here" > /path/to/token
+chmod 600 /path/to/token
 ```
 
-You will be prompted to paste an API token. Tokens can be created from the
-web UI under **Account** -> **API tokens**.
-
-#### Headless / keyring-free use
-
-On headless systems without a keyring, add `token_file` to the server entry in
-`~/.config/homeshare/config.toml` and skip `homeshare login`:
+Then add a server entry to `~/.config/homeshare/config.toml`:
 
 ```toml
 [servers.myserver]
 url = "https://homeshare.example.com"
-token_file = "/run/secrets/homeshare_token"
+token_file = "/path/to/token"
 ```
-
-The token file must have permissions `0600`. `homeshare logout` does not work
-with `token_file` servers; remove the entry from the config file manually.
 
 ### Upload
 
@@ -246,12 +241,6 @@ homeshare list
 
 ```bash
 homeshare delete $SHARE_ID
-```
-
-### Logout
-
-```bash
-homeshare logout
 ```
 
 ## Development

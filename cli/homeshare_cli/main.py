@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 import shlex
-import sys
 
 import click
 from rich.console import Console
@@ -9,13 +8,8 @@ from rich.table import Table
 
 from homeshare_cli.client import ClientError, HomeshareClient
 from homeshare_cli.config import (
-    ServerConfig,
-    delete_token,
     get_token,
-    load_config,
     resolve_server_name,
-    save_config,
-    set_token,
 )
 from homeshare_common.duration import parse_duration
 
@@ -39,10 +33,6 @@ def _resolve_server(server_name: str | None) -> ResolvedServer:
         token = get_token(srv)
     except ValueError as e:
         raise click.ClickException(str(e)) from None
-    if token is None:
-        raise click.ClickException(
-            f"No token stored for server {srv.name!r}. Run 'homeshare login' first."
-        )
     return ResolvedServer(
         client=HomeshareClient(base_url=srv.url, token=token),
         url=srv.url,
@@ -56,43 +46,6 @@ def _resolve_server(server_name: str | None) -> ResolvedServer:
 def cli(ctx: click.Context, server: str | None) -> None:
     ctx.ensure_object(dict)
     ctx.obj["server_name"] = server
-
-
-@cli.command(help="Authenticate with a homeshare server.")
-@click.argument("server_url")
-@click.argument("server_name")
-def login(server_url: str, server_name: str) -> None:
-    cfg = load_config()
-    token = click.prompt(
-        f"Paste your API token (created at {server_url}/account )",
-        hide_input=sys.stdin.isatty(),
-    )
-    client = HomeshareClient(base_url=server_url, token=token)
-    if not client.validate_token():
-        raise click.ClickException(
-            "Token validation failed. Check your token and server URL."
-        )
-    cfg.servers[server_name] = ServerConfig(name=server_name, url=server_url)
-    save_config(cfg)
-    set_token(cfg.servers[server_name], token)
-    console.print(f"[green]Logged in to {server_name!r} ({server_url})[/green]")
-
-
-@cli.command(help="Remove stored credentials for a server.")
-@click.pass_context
-def logout(ctx: click.Context) -> None:
-    server_name: str | None = ctx.obj.get("server_name")
-    try:
-        cfg, srv = resolve_server_name(server_name)
-    except ValueError as e:
-        raise click.ClickException(str(e)) from None
-    try:
-        delete_token(srv)
-    except ValueError as e:
-        raise click.ClickException(str(e)) from None
-    del cfg.servers[srv.name]
-    save_config(cfg)
-    console.print(f"[green]Logged out from {srv.name!r}[/green]")
 
 
 @cli.command(help="Upload a file to the server.")
