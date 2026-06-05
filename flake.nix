@@ -115,7 +115,6 @@
             ruff
             setuptools
             systemd-python
-            tomli-w
             ty
           ]);
       in {

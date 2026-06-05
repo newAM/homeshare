@@ -3,7 +3,6 @@ from pathlib import Path
 import tomllib
 
 import platformdirs
-import tomli_w
 
 
 @dataclass
@@ -72,19 +71,6 @@ def resolve_server_name(server_name: str | None) -> tuple[AppConfig, ServerConfi
     cfg = load_config()
     srv = cfg.get_server(server_name)
     return cfg, srv
-
-
-def save_config(cfg: AppConfig) -> None:
-    path = get_config_path()
-    data: dict[str, dict[str, dict[str, str]]] = {"servers": {}}
-    for name, server in sorted(cfg.servers.items()):
-        entry: dict[str, str] = {
-            "url": server.url,
-            "token_file": str(server.token_file),
-        }
-        data["servers"][name] = entry
-    path.write_text(tomli_w.dumps(data))
-    path.chmod(0o600)
 
 
 def get_token(server: ServerConfig) -> str:

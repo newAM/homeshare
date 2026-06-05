@@ -23,7 +23,6 @@ in
       platformdirs
       requests
       rich
-      tomli-w
       (python3Packages.callPackage ../lib/package.nix {})
     ];
 
