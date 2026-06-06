@@ -137,6 +137,14 @@ button:hover,
   display: block;
   margin-top: 0.5em;
   word-break: break-all;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  font-size: 0.9em;
+}
+
+.token-banner .btn-copy {
+  margin-top: 0.75em;
 }
 
 /* Expired timestamps */
