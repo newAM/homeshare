@@ -13,14 +13,7 @@ block content %}
 <h2>API Tokens</h2>
 
 {% if new_token %}
-<div
-  style="
-    background: #f0f0f0;
-    padding: 1em;
-    margin-bottom: 1em;
-    border: 2px solid #333;
-  "
->
+<div class="token-banner">
   <p>
     <strong>{{ new_token_name }}</strong> token created. Copy it now; it won't
     be shown again.
@@ -34,13 +27,13 @@ block content %}
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <p>
     <label for="name">Name</label><br />
-    <input type="text" id="name" name="name" required style="width: 20em" />
+    <input type="text" id="name" name="name" required />
   </p>
   <p>
     <label for="expires_in"
       >Expires after (optional, e.g. "30 days", "1 year")</label
     ><br />
-    <input type="text" id="expires_in" name="expires_in" style="width: 14em" />
+    <input type="text" id="expires_in" name="expires_in" />
   </p>
   <p>
     <button type="submit">Create</button>
@@ -82,7 +75,7 @@ block content %}
         >
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <input type="hidden" name="_method" value="DELETE" />
-          <button type="submit">Delete</button>
+          <button type="submit" class="btn-danger">Delete</button>
         </form>
       </td>
     </tr>

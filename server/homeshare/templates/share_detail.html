@@ -27,7 +27,7 @@ endblock %} {% block content %}
       <td>{{ link.label or "-" }}</td>
       <td>
         <a href="{{ url_for('web.download', link_id=link.link_id) }}"
-          >{{ link.link_id.hex[:8] }}</a
+          >Open &nearr;</a
         >
       </td>
       <td>
@@ -51,7 +51,7 @@ endblock %} {% block content %}
         >
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <input type="hidden" name="_method" value="DELETE" />
-          <button type="submit">Delete</button>
+          <button type="submit" class="btn-danger">Delete</button>
         </form>
       </td>
     </tr>
@@ -70,13 +70,13 @@ endblock %} {% block content %}
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <p>
     <label for="label">Label (optional)</label><br />
-    <input type="text" id="label" name="label" style="width: 20em" />
+    <input type="text" id="label" name="label" />
   </p>
   <p>
     <label for="expires_in"
       >Expires after (optional, e.g. "30 days", "1 year")</label
     ><br />
-    <input type="text" id="expires_in" name="expires_in" style="width: 14em" />
+    <input type="text" id="expires_in" name="expires_in" />
   </p>
   <p>
     <button type="submit">Create link</button>
@@ -90,8 +90,7 @@ endblock %} {% block content %}
 >
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <input type="hidden" name="_method" value="DELETE" />
-  <button type="submit">Delete file and all links</button>
+  <button type="submit" class="btn-danger">Delete file and all links</button>
 </form>
 
-<p><a href="{{ url_for('web.index') }}">Back to home</a></p>
 {% endblock %}

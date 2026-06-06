@@ -11,31 +11,19 @@
   </head>
   <body>
     <header>
-      <a href="{{ url_for('web.index') }}">Homeshare</a>
-      {% if user %} - signed in as {{ user.name or user.email or user.sub }}
-      &nbsp;<a href="{{ url_for('web.account') }}">Account</a> &nbsp;
-      <form
-        method="POST"
-        action="{{ url_for('auth.logout') }}"
-        style="display: inline"
-      >
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <button
-          type="submit"
-          style="
-            background: none;
-            border: none;
-            padding: 0;
-            color: inherit;
-            text-decoration: underline;
-            cursor: pointer;
-            font: inherit;
-          "
-        >
-          Sign out
-        </button>
-      </form>
-      {% else %} &nbsp;<a href="{{ url_for('auth.login') }}">Sign in</a>
+      <a class="brand" href="{{ url_for('web.index') }}">Homeshare</a>
+      {% if user %}
+      <nav class="header-nav">
+        <a href="{{ url_for('web.account') }}">Account</a>
+        <form method="POST" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn-link">Sign out</button>
+        </form>
+      </nav>
+      {% else %}
+      <nav class="header-nav">
+        <a href="{{ url_for('auth.login') }}">Sign in</a>
+      </nav>
       {% endif %}
     </header>
     <hr />
