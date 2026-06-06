@@ -85,6 +85,7 @@ in
           # Use Lax so the IdP callback redirect carries the session cookie.
           SESSION_COOKIE_SAMESITE = "Lax";
           ROLES_PATH = ["homeshare_roles"];
+          MAX_CONTENT_LENGTH = 1024;
         };
       };
 
@@ -240,6 +241,18 @@ in
           "htmlq 'a[href*=\"/links/\"]' --attribute href --filename share_detail.html | head -1",
         ).rstrip()
         link_id = link_href.strip("/").split("/")[1]
+
+      with subtest("Upload exceeding MAX_CONTENT_LENGTH is rejected"):
+        machine.succeed("dd if=/dev/urandom of=/tmp/bigfile.bin bs=1024 count=2")
+        csrf_big: str = get_csrf("/")
+
+        status = machine.succeed(
+          f"curl -s -o /dev/null -w '%{{http_code}}'"
+          f" -b homeshare_cookies.txt"
+          f" -F 'csrf_token={csrf_big}' -F 'file=@/tmp/bigfile.bin'"
+          f" ${homeshareUrl}/upload",
+        ).strip()
+        assert status == "413", f"expected 413, got: {status}"
 
       with subtest("Download via web"):
         downloaded = machine.succeed(
