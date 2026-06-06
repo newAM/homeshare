@@ -2,6 +2,7 @@
 name = "homeshare-cli"
 version = "0.1.0"
 description = "CLI client for homeshare"
+authors = [{ name = "Alex Martens", email = "alex+homeshare@thinglab.org" }]
 requires-python = ">=3.13"
 license = "AGPL-3.0-or-later"
 dependencies = [

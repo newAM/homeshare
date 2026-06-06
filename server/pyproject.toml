@@ -3,7 +3,7 @@ name = "homeshare-server"
 version = "0.1.0"
 description = "A simple file sharing service for home servers"
 readme = "README.md"
-authors = [{ name = "Alex Martens", email = "alex@thinglab.org" }]
+authors = [{ name = "Alex Martens", email = "alex+homeshare@thinglab.org" }]
 requires-python = ">=3.13"
 license = "AGPL-3.0-or-later"
 dependencies = [
