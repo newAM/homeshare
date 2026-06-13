@@ -100,6 +100,28 @@ def test_me_expired_token_returns_401(client: FlaskClient, app: Flask) -> None:
     assert response.status_code == 401
 
 
+def test_api_request_updates_last_used_at(
+    client: FlaskClient, app: Flask, api_token: str
+) -> None:
+    token_hash = hash_token(api_token)
+
+    with app.app_context():
+        record = db.session.execute(
+            db.select(ApiToken).where(ApiToken.hashed_token == token_hash)
+        ).scalar_one()
+        assert record.last_used_at is None
+
+    response = client.get("/api/me", headers=_auth_header(api_token))
+    assert response.status_code == 200
+
+    with app.app_context():
+        db.session.expire_all()
+        record = db.session.execute(
+            db.select(ApiToken).where(ApiToken.hashed_token == token_hash)
+        ).scalar_one()
+        assert record.last_used_at is not None
+
+
 # --- list shares ---
 
 

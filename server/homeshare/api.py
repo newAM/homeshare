@@ -1,6 +1,7 @@
 import functools
 import uuid
 from collections.abc import Callable
+from datetime import datetime, timezone
 
 from flask import (
     Blueprint,
@@ -120,6 +121,8 @@ def _bearer_user() -> UserSession | None:
         reason = "expired" if record and record.is_expired else "invalid"
         current_app.logger.warning("event=auth_failed reason=%s", reason)
         return None
+    record.last_used_at = datetime.now(timezone.utc)
+    db.session.commit()
     return {"sub": record.owner}
 
 

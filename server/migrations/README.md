@@ -15,12 +15,17 @@ Edit the relevant model in `server/homeshare/models.py`.
 
 ### 2. Generate the migration script
 
-From `server/`:
-
 ```sh
 cd server
 FLASK_APP=homeshare.wsgi HOMESHARE_CONFIG_FILE=/path/to/config.json \
   flask db migrate -m "add expiry to share"
+```
+
+If an existing database does not exist:
+
+```sh
+FLASK_APP=homeshare.wsgi HOMESHARE_CONFIG_FILE=/path/to/config.json \
+  flask db upgrade
 ```
 
 Alembic compares the model against the current database schema and generates

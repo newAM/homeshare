@@ -59,6 +59,10 @@ class ApiToken(ExpiryMixin, Base):
         default=lambda: datetime.now(timezone.utc),
     )
     expires_in: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
 
 class Share(Base):

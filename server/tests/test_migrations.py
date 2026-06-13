@@ -114,10 +114,9 @@ def test_initial_migration_upgrade_and_downgrade(migration_app: Flask) -> None:
     assert "stored_path" in _column_names(migration_app, "share")
     assert "download_count" in _column_names(migration_app, "share_link")
 
-    # --- rollback: the initial migration has no predecessor, so rolling back
-    #     should remove all application tables --------------------------------
+    # --- rollback: undo every migration so all application tables are removed
     with migration_app.app_context():
-        downgrade(directory=migrations_dir, revision="-1")
+        downgrade(directory=migrations_dir, revision="base")
 
     tables_after_downgrade = _table_names(migration_app)
     assert "api_token" not in tables_after_downgrade
@@ -132,3 +131,26 @@ def test_initial_migration_upgrade_and_downgrade(migration_app: Flask) -> None:
     assert "api_token" in tables_after_reapply
     assert "share" in tables_after_reapply
     assert "share_link" in tables_after_reapply
+
+
+def test_last_used_at_migration_upgrade_and_downgrade(migration_app: Flask) -> None:
+    """The last_used_at migration adds and removes the column on api_token."""
+    migrations_dir = "migrations"
+
+    # forward: last_used_at must exist on api_token
+    with migration_app.app_context():
+        upgrade(directory=migrations_dir)
+
+    assert "last_used_at" in _column_names(migration_app, "api_token")
+
+    # rollback: last_used_at must be removed
+    with migration_app.app_context():
+        downgrade(directory=migrations_dir, revision="-1")
+
+    assert "last_used_at" not in _column_names(migration_app, "api_token")
+
+    # re-apply: last_used_at must be back
+    with migration_app.app_context():
+        upgrade(directory=migrations_dir)
+
+    assert "last_used_at" in _column_names(migration_app, "api_token")
