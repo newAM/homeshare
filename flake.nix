@@ -124,6 +124,9 @@
             pkgs.pkg-config
             pkgs.systemd
           ];
+          shellHook = ''
+            export PYTHONPATH="$PWD/lib:$PWD/server:$PWD/cli:$PYTHONPATH"
+          '';
         };
       }
     );
