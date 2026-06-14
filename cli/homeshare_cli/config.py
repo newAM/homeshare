@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+import os
 import tomllib
-
-import platformdirs
 
 
 @dataclass
@@ -32,9 +31,9 @@ class AppConfig:
 
 
 def get_config_path() -> Path:
-    return (
-        platformdirs.user_config_path("homeshare", ensure_exists=True) / "config.toml"
-    )
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+    base = Path(xdg_config_home) if xdg_config_home else Path.home() / ".config"
+    return base / "homeshare" / "config.toml"
 
 
 def _parse_config(text: str) -> AppConfig:

@@ -20,7 +20,6 @@ in
 
     dependencies = with python3Packages; [
       click
-      platformdirs
       requests
       requests-toolbelt
       rich

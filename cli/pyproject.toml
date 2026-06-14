@@ -8,7 +8,6 @@ license = "AGPL-3.0-or-later"
 dependencies = [
   "click>=8",
   "homeshare-common",
-  "platformdirs",
   "requests",
   "requests-toolbelt",
   "rich",

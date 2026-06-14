@@ -108,7 +108,6 @@
               flask-session
               flask-sqlalchemy
               flask-wtf
-              platformdirs
               pytest
               pytest-cov
               pytest-flask
