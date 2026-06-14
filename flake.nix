@@ -84,9 +84,11 @@
     packages = forEachSystem (
       system: let
         pkgs = importPkgs system;
-      in {
-        inherit (pkgs) homeshare-cli homeshare-server;
-      }
+      in
+        {inherit (pkgs) homeshare-cli;}
+        // nixpkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+          inherit (pkgs) homeshare-server;
+        }
     );
 
     formatter = forEachSystem (
@@ -97,34 +99,40 @@
       system: let
         pkgs = importPkgs system;
         pythonEnv = pkgs.python3.withPackages (ps:
-          with ps; [
-            authlib
-            click
-            flask
-            flask-migrate
-            flask-session
-            flask-sqlalchemy
-            flask-wtf
-            platformdirs
-            pytest
-            pytest-cov
-            pytest-flask
-            requests
-            requests-toolbelt
-            responses
-            rich
-            ruff
-            setuptools
-            systemd-python
-            ty
-          ]);
+          with ps;
+            [
+              authlib
+              click
+              flask
+              flask-migrate
+              flask-session
+              flask-sqlalchemy
+              flask-wtf
+              platformdirs
+              pytest
+              pytest-cov
+              pytest-flask
+              requests
+              requests-toolbelt
+              responses
+              rich
+              ruff
+              setuptools
+              ty
+            ]
+            ++ nixpkgs.lib.optionals pkgs.stdenv.isLinux [
+              systemd-python
+            ]);
       in {
         default = pkgs.mkShell {
-          packages = [
-            pythonEnv
-            pkgs.pkg-config
-            pkgs.systemd
-          ];
+          packages =
+            [
+              pythonEnv
+              pkgs.pkg-config
+            ]
+            ++ nixpkgs.lib.optionals pkgs.stdenv.isLinux [
+              pkgs.systemd
+            ];
           shellHook = ''
             export PYTHONPATH="${pythonEnv}/${pythonEnv.sitePackages}:$PWD/lib:$PWD/server:$PWD/cli:$PYTHONPATH"
           '';
@@ -135,20 +143,24 @@
     checks = forEachSystem (
       system: let
         pkgs = importPkgs system;
-      in {
-        inherit (pkgs) homeshare-cli homeshare-server;
+      in
+        {
+          inherit (pkgs) homeshare-cli;
 
-        nixos-basic = pkgs.callPackage ./nixos/tests/basic.nix {inherit self;};
+          formatting = ((treefmt.lib.evalModule pkgs (nixpkgs.lib.recursiveUpdate treefmtSettings
+            {
+              programs.ruff-check.enable = true;
+            }))
+            .config
+            .build
+            .check)
+          self;
+        }
+        // nixpkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+          inherit (pkgs) homeshare-server;
 
-        formatting = ((treefmt.lib.evalModule pkgs (nixpkgs.lib.recursiveUpdate treefmtSettings
-          {
-            programs.ruff-check.enable = true;
-          }))
-          .config
-          .build
-          .check)
-        self;
-      }
+          nixos-basic = pkgs.callPackage ./nixos/tests/basic.nix {inherit self;};
+        }
     );
   };
 }
