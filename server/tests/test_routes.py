@@ -51,6 +51,10 @@ def test_index_authenticated_shows_upload_form(authed_client: FlaskClient) -> No
     assert response.status_code == 200
     assert b"Upload" in response.data
     assert b"Sign out" in response.data
+    # The progress element is present but hidden by default so that users
+    # without JavaScript are unaffected
+    assert b'id="upload-progress"' in response.data
+    assert b'id="upload-progress-wrap" hidden' in response.data
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["Strict-Transport-Security"] == "max-age=31536000"
     assert response.headers["Content-Security-Policy"] == (

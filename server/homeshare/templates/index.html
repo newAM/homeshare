@@ -19,7 +19,11 @@ content %}
     <input type="text" id="expires_in" name="expires_in" />
   </p>
   <p>
-    <button type="submit">Upload</button>
+    <button type="submit" id="upload-button">Upload</button>
+  </p>
+  <p id="upload-progress-wrap" hidden>
+    <progress id="upload-progress" value="0" max="100"></progress>
+    <span id="upload-progress-label"></span>
   </p>
 </form>
 

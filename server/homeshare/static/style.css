@@ -113,6 +113,7 @@ button:hover,
 }
 
 /* Destructive actions */
+
 .btn-danger {
   background: #fce8e8;
   border-color: #d9a0a0;
@@ -121,6 +122,40 @@ button:hover,
 
 .btn-danger:hover {
   background: #f5d0d0;
+}
+
+/* Upload progress bar */
+
+#upload-progress-wrap {
+  margin-top: 0.5em;
+}
+
+#upload-progress {
+  width: 18em;
+  height: 1.2em;
+  vertical-align: middle;
+}
+
+#upload-progress-label {
+  margin-left: 0.5em;
+  font-size: 0.9em;
+}
+
+#upload-progress::-webkit-progress-bar {
+  background: #f0f0f0;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+}
+
+#upload-progress::-webkit-progress-value {
+  background: #4a90d9;
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+#upload-progress::-moz-progress-bar {
+  background: #4a90d9;
+  border-radius: 2px;
 }
 
 /* Token banner (shown once after token creation) */
@@ -193,6 +228,11 @@ button:hover,
 
   .btn-danger:hover {
     background: #3d1515;
+  }
+
+  #upload-progress::-webkit-progress-bar {
+    background: #1e1e1e;
+    border-color: #555;
   }
 
   .token-banner {
