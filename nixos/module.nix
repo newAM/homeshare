@@ -7,6 +7,40 @@
   cfg = config.services.homeshare;
   settingsFormat = pkgs.formats.json {};
   configurationFile = settingsFormat.generate "homeshare_config.json" cfg.settings;
+  gunicornConfigFile = pkgs.writeText "gunicorn.conf.py" ''
+    accesslog = "-"
+    access_log_format = "%(m)s %(U)s %(s)s %(b)s %(D)sµs"
+    logger_class = "gunicorn.glogging.Logger"
+    logconfig_dict = {
+        "formatters": {
+            "generic": {
+                "format": "%(message)s",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "generic",
+                "stream": "ext://sys.stdout",
+            },
+        },
+        "root": {"level": "INFO", "handlers": ["console"]},
+        "loggers": {
+            "gunicorn.error": {
+                "level": "INFO",
+                "handlers": ["console"],
+                "propagate": False,
+                "qualname": "gunicorn.error",
+            },
+            "gunicorn.access": {
+                "level": "INFO",
+                "handlers": ["console"],
+                "propagate": False,
+                "qualname": "gunicorn.access",
+            },
+        },
+    }
+  '';
 in {
   options.services.homeshare = {
     enable = lib.mkEnableOption "Homeshare file sharing service";
@@ -204,7 +238,7 @@ in {
           "${flask} db upgrade --directory ${pkgs.homeshare-server}/share/homeshare/migrations"
           "${flask} cleanup"
         ];
-        ExecStart = "${lib.getExe' pkgs.homeshare-server "gunicorn"} --bind unix:${cfg.bindPath} homeshare.wsgi:application";
+        ExecStart = "${lib.getExe' pkgs.homeshare-server "gunicorn"} --config ${gunicornConfigFile} --bind unix:${cfg.bindPath} homeshare.wsgi:application";
         User = cfg.user;
         Group = cfg.group;
         Restart = "on-failure";
