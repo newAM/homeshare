@@ -21,7 +21,7 @@ Changelog = "https://github.com/newAM/homeshare/blob/main/CHANGELOG.md"
 homeshare = "homeshare_cli.main:cli"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=82.0.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
