@@ -22,6 +22,7 @@ in
       click
       platformdirs
       requests
+      requests-toolbelt
       rich
       (python3Packages.callPackage ../lib/package.nix {})
     ];

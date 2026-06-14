@@ -10,6 +10,7 @@ dependencies = [
   "homeshare-common",
   "platformdirs",
   "requests",
+  "requests-toolbelt",
   "rich",
 ]
 

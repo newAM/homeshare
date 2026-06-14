@@ -1,9 +1,18 @@
 from dataclasses import dataclass
 from pathlib import Path
 import shlex
+from typing import Any
 
 import click
 from rich.console import Console
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    Progress,
+    TextColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
 from rich.table import Table
 
 from homeshare_cli.client import ClientError, HomeshareClient
@@ -53,8 +62,17 @@ def cli(ctx: click.Context, server: str | None) -> None:
 @click.option(
     "--expiry", "-e", default=None, help="Expiry duration (e.g. '7 days', '2h')."
 )
+@click.option(
+    "-q",
+    "--quiet",
+    is_flag=True,
+    default=False,
+    help="Suppress the upload progress bar.",
+)
 @click.pass_context
-def upload(ctx: click.Context, file_path: Path, expiry: str | None) -> None:
+def upload(
+    ctx: click.Context, file_path: Path, expiry: str | None, quiet: bool
+) -> None:
     server_name: str | None = ctx.obj.get("server_name")
     resolved = _resolve_server(server_name)
     expires_in = None
@@ -64,7 +82,7 @@ def upload(ctx: click.Context, file_path: Path, expiry: str | None) -> None:
         except ValueError as e:
             raise click.ClickException(f"Invalid expiry value: {e}") from None
     try:
-        result = resolved.client.upload(file_path, expires_in=expires_in)
+        result = _upload(resolved.client, file_path, expires_in, quiet=quiet)
     except ClientError as e:
         raise click.ClickException(f"Upload failed: {e.message}") from None
     base = resolved.url.rstrip("/")
@@ -78,6 +96,32 @@ def upload(ctx: click.Context, file_path: Path, expiry: str | None) -> None:
         no_wrap=True,
     )
     console.print(f"  Delete: homeshare delete {share_id}", no_wrap=True)
+
+
+def _upload(
+    client: HomeshareClient,
+    file_path: Path,
+    expires_in: int | None,
+    quiet: bool,
+) -> dict[str, Any]:
+    """Run an upload with an optional progress bar and return the parsed result."""
+    total = file_path.stat().st_size
+    progress = Progress(
+        TextColumn("[bold blue]{task.description}"),
+        BarColumn(),
+        DownloadColumn(),
+        TransferSpeedColumn(),
+        TimeRemainingColumn(),
+        console=console,
+        disable=quiet or not console.is_terminal,
+    )
+    with progress:
+        task = progress.add_task("Uploading", total=total)
+
+        def on_progress(bytes_read: int, total_bytes: int) -> None:
+            progress.update(task, completed=bytes_read, total=total_bytes)
+
+        return client.upload(file_path, expires_in=expires_in, on_progress=on_progress)
 
 
 @cli.command(help="Delete a share or link by ID.")

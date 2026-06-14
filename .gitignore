@@ -17,3 +17,4 @@ result*
 
 # misc
 tmp/
+*.bin

@@ -110,6 +110,7 @@
             pytest-cov
             pytest-flask
             requests
+            requests-toolbelt
             responses
             rich
             ruff
@@ -125,7 +126,7 @@
             pkgs.systemd
           ];
           shellHook = ''
-            export PYTHONPATH="$PWD/lib:$PWD/server:$PWD/cli:$PYTHONPATH"
+            export PYTHONPATH="${pythonEnv}/${pythonEnv.sitePackages}:$PWD/lib:$PWD/server:$PWD/cli:$PYTHONPATH"
           '';
         };
       }

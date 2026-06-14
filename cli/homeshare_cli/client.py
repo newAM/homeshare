@@ -1,8 +1,10 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import requests
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 DEFAULT_TIMEOUT = 30
 
@@ -32,16 +34,29 @@ class HomeshareClient:
         )
         return resp.status_code == 200
 
-    def upload(self, file_path: Path, expires_in: int | None = None) -> dict[str, Any]:
-        data: dict[str, str | int] = {}
-        if expires_in is not None:
-            data["expires_in"] = str(expires_in)
+    def upload(
+        self,
+        file_path: Path,
+        expires_in: int | None = None,
+        on_progress: Callable[[int, int], None] | None = None,
+    ) -> dict[str, Any]:
         with file_path.open("rb") as f:
+            fields: dict[str, Any] = {
+                "file": (file_path.name, f, "application/octet-stream"),
+            }
+            if expires_in is not None:
+                fields["expires_in"] = str(expires_in)
+            encoder = MultipartEncoder(fields=fields)
+
+            def _on_read(monitor: MultipartEncoderMonitor) -> None:
+                if on_progress is not None:
+                    on_progress(monitor.bytes_read, encoder.len)
+
+            monitor = MultipartEncoderMonitor(encoder, _on_read)
             resp = requests.post(
                 self._url("/api/shares"),
-                headers=self._headers(),
-                files={"file": (file_path.name, f)},
-                data=data,
+                data=monitor,
+                headers={**self._headers(), "Content-Type": monitor.content_type},
                 timeout=self.timeout,
             )
         if resp.status_code != 201:

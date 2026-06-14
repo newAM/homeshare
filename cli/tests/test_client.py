@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import itertools
 import pytest
 import responses
 
@@ -87,6 +88,46 @@ class TestUpload:
             with pytest.raises(ClientError) as exc_info:
                 client.upload(f)
             assert exc_info.value.status_code == 401
+
+    def test_progress_callback(
+        self, client: HomeshareClient, base_url: str, tmp_path: Path
+    ) -> None:
+        f = tmp_path / "test.bin"
+        payload = b"x" * 65536
+        f.write_bytes(payload)
+        seen: list[tuple[int, int]] = []
+
+        def on_progress(bytes_read: int, total: int) -> None:
+            seen.append((bytes_read, total))
+
+        expected = {"share_id": "abc", "link_id": "def"}
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST, f"{base_url}/api/shares", json=expected, status=201
+            )
+            result = client.upload(f, on_progress=on_progress)
+        assert result == expected
+        assert seen, "progress callback was never invoked"
+        # `responses` reads the streamed body in one go, so at least the final
+        # call must report completion with matching read/total values.
+        assert seen[-1][0] == seen[-1][1]
+        # total covers the file plus multipart framing, so it exceeds the file.
+        assert seen[-1][1] > len(payload)
+        # bytes_read must be monotonically non-decreasing.
+        assert all(a[0] <= b[0] for a, b in itertools.pairwise(seen))
+
+    def test_progress_callback_default_none(
+        self, client: HomeshareClient, base_url: str, tmp_path: Path
+    ) -> None:
+        f = tmp_path / "test.txt"
+        f.write_text("hello")
+        expected = {"share_id": "abc", "link_id": "def"}
+        with responses.RequestsMock() as rsps:
+            rsps.add(
+                responses.POST, f"{base_url}/api/shares", json=expected, status=201
+            )
+            result = client.upload(f)
+        assert result == expected
 
 
 class TestListShares:
