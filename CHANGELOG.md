@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a `last_used_at` field to API token.
 - Added an upload progress bar to the CLI.
 
+### Changed
+
+- Changed upload read timeout from 30s to 300s.
+
 ## [0.1.0] - 2026-06-13
 
 - Initial release.

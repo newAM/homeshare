@@ -1,6 +1,7 @@
-from pathlib import Path
-
 import itertools
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 import responses
 
@@ -20,6 +21,26 @@ def token() -> str:
 @pytest.fixture()
 def client(base_url: str, token: str) -> HomeshareClient:
     return HomeshareClient(base_url=base_url, token=token)
+
+
+class TestTimeout:
+    def test_normal_requests_use_30s(self, client: HomeshareClient) -> None:
+        with patch("homeshare_cli.client.requests.get") as mock_get:
+            mock_get.return_value.status_code = 200
+            mock_get.return_value.json.return_value = []
+            client.list_shares()
+        assert mock_get.call_args.kwargs["timeout"] == 30
+
+    def test_upload_uses_generous_read_timeout(
+        self, client: HomeshareClient, tmp_path: Path
+    ) -> None:
+        f = tmp_path / "test.txt"
+        f.write_text("hello")
+        with patch("homeshare_cli.client.requests.post") as mock_post:
+            mock_post.return_value.status_code = 201
+            mock_post.return_value.json.return_value = {"share_id": "1", "link_id": "2"}
+            client.upload(f)
+        assert mock_post.call_args.kwargs["timeout"] == (30, 300)
 
 
 class TestValidateToken:

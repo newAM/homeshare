@@ -6,7 +6,11 @@ from typing import Any
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
+# Timeout for TCP connect and read (except uploads)
 DEFAULT_TIMEOUT = 30
+
+# Read timeout for uploads
+UPLOAD_READ_TIMEOUT = 300
 
 
 class ClientError(Exception):
@@ -20,7 +24,6 @@ class ClientError(Exception):
 class HomeshareClient:
     base_url: str
     token: str = field(repr=False)
-    timeout: int = field(default=DEFAULT_TIMEOUT)
 
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self.token}"}
@@ -30,7 +33,9 @@ class HomeshareClient:
 
     def validate_token(self) -> bool:
         resp = requests.get(
-            self._url("/api/me"), headers=self._headers(), timeout=self.timeout
+            self._url("/api/me"),
+            headers=self._headers(),
+            timeout=DEFAULT_TIMEOUT,
         )
         return resp.status_code == 200
 
@@ -57,7 +62,7 @@ class HomeshareClient:
                 self._url("/api/shares"),
                 data=monitor,
                 headers={**self._headers(), "Content-Type": monitor.content_type},
-                timeout=self.timeout,
+                timeout=(DEFAULT_TIMEOUT, UPLOAD_READ_TIMEOUT),
             )
         if resp.status_code != 201:
             raise ClientError(resp.text, resp.status_code)
@@ -65,7 +70,9 @@ class HomeshareClient:
 
     def list_shares(self) -> list[dict[str, Any]]:
         resp = requests.get(
-            self._url("/api/shares"), headers=self._headers(), timeout=self.timeout
+            self._url("/api/shares"),
+            headers=self._headers(),
+            timeout=DEFAULT_TIMEOUT,
         )
         if resp.status_code != 200:
             raise ClientError(resp.text, resp.status_code)
@@ -73,7 +80,7 @@ class HomeshareClient:
 
     def _delete(self, path: str) -> tuple[dict[str, Any], int]:
         resp = requests.delete(
-            self._url(path), headers=self._headers(), timeout=self.timeout
+            self._url(path), headers=self._headers(), timeout=DEFAULT_TIMEOUT
         )
         if resp.status_code not in (200, 404):
             raise ClientError(resp.text, resp.status_code)
