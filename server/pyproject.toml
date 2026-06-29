@@ -38,9 +38,3 @@ testpaths = ["tests"]
 filterwarnings = [
   "ignore:datetime.datetime.utcnow\\(\\) is deprecated:DeprecationWarning:flask_session.sqlalchemy.sqlalchemy",
 ]
-
-[tool.uv.sources]
-homeshare-common.path = "../lib"
-
-[dependency-groups]
-dev = ["pytest-cov", "pytest-flask", "pytest", "ruff", "ty"]

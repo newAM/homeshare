@@ -245,24 +245,22 @@ homeshare delete $SHARE_ID
 
 ## Development
 
+The nix development shell provides all required packages.
+Load the nix development shell with:
+
+- `nix develop`
+- Automatically with [`nix-direnv`](https://github.com/nix-community/nix-direnv)
+
 ### Running checks
 
-Each package has its own directory with its own `pyproject.toml` and `uv` environment.
+Run these commands from the repository root:
 
-Run these commands:
+- `pytest`
+- `ruff check .`
+- `ruff format --check .`
+- `ty check .`
 
-- `uv run pytest`
-- `uv run ruff check .`
-- `uv run ruff format --check .`
-- `uv run ty check .`
-
-In these directories:
-
-- `server`
-- `lib`
-- `cli`
-
-Running `nix flake check` will build all packages and run the full test suite including end-to-end NixOS tests.
+Running `nix flake check` builds all packages and runs the full test suite including end-to-end NixOS tests.
 
 ### Interactive VM for manual end to end testing
 

@@ -26,9 +26,3 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.uv.sources]
-homeshare-common.path = "../lib"
-
-[dependency-groups]
-dev = ["pytest-cov", "pytest", "responses", "ruff", "ty"]

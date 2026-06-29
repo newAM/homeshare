@@ -5,18 +5,3 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-
-  - package-ecosystem: "uv"
-    directory: "/server"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "uv"
-    directory: "/cli"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "uv"
-    directory: "/lib"
-    schedule:
-      interval: "weekly"
