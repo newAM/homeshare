@@ -2,9 +2,8 @@ import io
 from pathlib import Path
 
 import pytest
-from werkzeug.datastructures import FileStorage
-
 from homeshare.storage import cleanup_orphans, get_file, save_file
+from werkzeug.datastructures import FileStorage
 
 
 def test_save_file_creates_file(tmp_path: Path) -> None:

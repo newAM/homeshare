@@ -1,9 +1,10 @@
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
-import shlex
 from typing import Any
 
 import click
+from homeshare_common.duration import parse_duration
 from rich.console import Console
 from rich.progress import (
     BarColumn,
@@ -20,7 +21,6 @@ from homeshare_cli.config import (
     get_token,
     resolve_server_name,
 )
-from homeshare_common.duration import parse_duration
 
 console = Console()
 

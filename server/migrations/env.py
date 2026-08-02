@@ -2,8 +2,8 @@ import logging
 from logging.config import fileConfig
 
 from alembic import context
-from alembic.runtime.migration import MigrationContext
 from alembic.operations.ops import MigrationScript
+from alembic.runtime.migration import MigrationContext
 from flask import current_app
 from sqlalchemy import MetaData
 from sqlalchemy.engine import Engine

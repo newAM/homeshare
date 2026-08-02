@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 import pytest
 import responses
-
 from homeshare_cli.client import ClientError, HomeshareClient
 
 

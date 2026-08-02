@@ -1,15 +1,14 @@
-from collections.abc import Generator
 import secrets
+from collections.abc import Generator
 
 import pytest
 from flask import Flask
 from flask.testing import FlaskClient
-from itsdangerous import URLSafeTimedSerializer
-
 from homeshare.app import create_app
 from homeshare.config import Config
 from homeshare.models import ApiToken, db
 from homeshare.tokens import generate_token, hash_token
+from itsdangerous import URLSafeTimedSerializer
 
 
 @pytest.fixture(scope="session")

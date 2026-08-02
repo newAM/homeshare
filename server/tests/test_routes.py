@@ -4,10 +4,9 @@ import uuid
 from pathlib import Path
 from unittest.mock import patch
 
+from conftest import get_csrf_token
 from flask import Flask
 from flask.testing import FlaskClient
-
-from conftest import get_csrf_token
 
 
 def _upload_api(

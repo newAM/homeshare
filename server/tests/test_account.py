@@ -1,7 +1,6 @@
+from conftest import get_csrf_token
 from flask import Flask
 from flask.testing import FlaskClient
-
-from conftest import get_csrf_token
 from homeshare.models import ApiToken, db
 from homeshare.tokens import generate_token, hash_token
 

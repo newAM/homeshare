@@ -20,11 +20,9 @@ from pathlib import Path
 
 import pytest
 import sqlalchemy as sa
-from flask_migrate import downgrade, upgrade
 from flask import Flask
-
+from flask_migrate import downgrade, upgrade
 from homeshare.config import Config
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

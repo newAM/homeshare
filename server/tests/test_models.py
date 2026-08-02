@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from flask import Flask
-
 from homeshare.models import Share, ShareLink, db
 
 

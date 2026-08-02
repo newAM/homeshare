@@ -6,7 +6,6 @@ from pathlib import Path
 
 from flask import Flask
 from flask.testing import FlaskClient
-
 from homeshare.models import ApiToken, Share, ShareLink, db
 from homeshare.tokens import generate_token, hash_token
 

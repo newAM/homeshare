@@ -5,7 +5,6 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 
 from authlib.integrations.base_client import OAuthError
-
 from flask import (
     Blueprint,
     Flask,
@@ -17,6 +16,7 @@ from flask import (
     url_for,
 )
 from flask.typing import ResponseReturnValue
+from homeshare_common.duration import parse_duration
 
 from homeshare.api import (
     create_link_response,
@@ -32,7 +32,6 @@ from homeshare.api import (
 from homeshare.auth import UserSession, current_user, oauth
 from homeshare.models import ApiToken, db
 from homeshare.tokens import generate_token, hash_token
-from homeshare_common.duration import parse_duration
 
 
 def _project_urls() -> dict[str, str]:

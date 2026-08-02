@@ -15,6 +15,7 @@ from flask import (
     send_file,
 )
 from flask.typing import ResponseReturnValue
+from homeshare_common.duration import MAX_EXPIRES_IN
 from sqlalchemy import update
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
@@ -23,7 +24,6 @@ from homeshare.auth import UserSession
 from homeshare.models import ApiToken, Share, ShareLink, db
 from homeshare.storage import delete_file, get_file, save_file
 from homeshare.tokens import hash_token
-from homeshare_common.duration import MAX_EXPIRES_IN
 
 
 def get_owned_share(owner: str, share_id: uuid.UUID) -> Share | None:

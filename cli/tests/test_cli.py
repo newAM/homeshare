@@ -3,10 +3,8 @@ from pathlib import Path
 import click.testing
 import pytest
 import responses
-
-from homeshare_cli.main import cli
-
 from conftest import make_config, write_config
+from homeshare_cli.main import cli
 
 
 @pytest.fixture()

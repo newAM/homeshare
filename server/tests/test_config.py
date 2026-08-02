@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 
 import pytest
-
 from homeshare.auth import value_at_path
 from homeshare.config import Config, ConfigError, load_config
 

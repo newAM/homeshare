@@ -2,7 +2,6 @@ from pathlib import Path
 
 from flask import Flask
 from flask.testing import FlaskCliRunner
-
 from homeshare.models import Share, db
 
 

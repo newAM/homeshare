@@ -1,5 +1,4 @@
 import pytest
-
 from homeshare_common.duration import MAX_EXPIRES_IN, parse_duration
 
 _Y = 365 * 24 * 3600
