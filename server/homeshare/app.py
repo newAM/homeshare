@@ -29,7 +29,7 @@ def _setup_logging(level: int = logging.WARNING) -> None:
 
 def create_app(config: Config | None = None) -> Flask:
     log_level = (
-        logging.getLevelName(config.log_level)
+        logging.getLevelNamesMapping()[config.log_level]
         if config is not None
         else logging.WARNING
     )
