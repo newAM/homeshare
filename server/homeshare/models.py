@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from flask_sqlalchemy import SQLAlchemy
@@ -22,7 +22,7 @@ def _aware(dt: datetime) -> datetime:
     an aware datetime on all backends; this helper is a belt-and-suspenders
     guard for any value that somehow arrives naive.
     """
-    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
 
 
 class ExpiryMixin:
@@ -35,7 +35,7 @@ class ExpiryMixin:
     def is_expired(self) -> bool:
         if self.expires_in is None:
             return False
-        return datetime.now(timezone.utc) > _aware(self.created_at) + timedelta(
+        return datetime.now(UTC) > _aware(self.created_at) + timedelta(
             seconds=self.expires_in
         )
 
@@ -56,7 +56,7 @@ class ApiToken(ExpiryMixin, Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
     expires_in: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_used_at: Mapped[datetime | None] = mapped_column(
@@ -77,7 +77,7 @@ class Share(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     links: Mapped[list["ShareLink"]] = relationship(
@@ -108,7 +108,7 @@ class ShareLink(ExpiryMixin, Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
 
     share: Mapped["Share"] = relationship("Share", back_populates="links")

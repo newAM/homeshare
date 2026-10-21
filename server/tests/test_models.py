@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from flask import Flask
 from homeshare.models import Share, ShareLink, db
@@ -136,7 +136,7 @@ def test_link_not_expired_when_future_expiry(app: Flask) -> None:
 
         link = ShareLink(
             share_id=share.share_id,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             expires_in=86400,
         )
         db.session.add(link)
@@ -157,7 +157,7 @@ def test_link_is_expired_when_past_expiry(app: Flask) -> None:
 
         link = ShareLink(
             share_id=share.share_id,
-            created_at=datetime.now(timezone.utc) - timedelta(hours=2),
+            created_at=datetime.now(UTC) - timedelta(hours=2),
             expires_in=3600,
         )
         db.session.add(link)

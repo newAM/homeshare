@@ -2,7 +2,7 @@ import functools
 import importlib.metadata
 import uuid
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from authlib.integrations.base_client import OAuthError
 from flask import (
@@ -123,7 +123,7 @@ def create_web_blueprint(app: Flask) -> None:
 
         def to_isoformat(dt: datetime) -> str:
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.replace(tzinfo=UTC)
             return dt.isoformat()
 
         return {

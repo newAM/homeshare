@@ -1,7 +1,7 @@
 import io
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from flask import Flask
@@ -92,7 +92,7 @@ def test_me_expired_token_returns_401(client: FlaskClient, app: Flask) -> None:
             hashed_token=hash_token(raw),
             expires_in=1,
         )
-        token.created_at = datetime.now(timezone.utc) - timedelta(seconds=10)
+        token.created_at = datetime.now(UTC) - timedelta(seconds=10)
         db.session.add(token)
         db.session.commit()
     response = client.get("/api/me", headers=_auth_header(raw))
@@ -344,7 +344,7 @@ def test_download_expired_link_returns_410(client: FlaskClient, app: Flask) -> N
 
         link = ShareLink(
             share_id=share.share_id,
-            created_at=datetime.now(timezone.utc) - timedelta(hours=2),
+            created_at=datetime.now(UTC) - timedelta(hours=2),
             expires_in=3600,
         )
         db.session.add(link)
