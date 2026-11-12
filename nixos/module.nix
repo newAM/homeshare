@@ -227,8 +227,8 @@ in {
         # Use the NixOS system CA bundle so that self-signed or private CA
         # certificates trusted via security.pki.certificateFiles are also
         # trusted by Python's ssl module and the requests library.
-        SSL_CERT_FILE = "/etc/ssl/certs/ca-bundle.crt";
-        REQUESTS_CA_BUNDLE = "/etc/ssl/certs/ca-bundle.crt";
+        SSL_CERT_FILE = config.security.pki.caBundle;
+        REQUESTS_CA_BUNDLE = config.security.pki.caBundle;
       };
 
       serviceConfig = {
