@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed the `homeshare-cli` build on `aarch64-darwin`.
+- Fixed the NixOS service failing to start when gunicorn could not create its
+  control socket in the read-only home directory (`/var/empty`).
 
 ## [0.1.0] - 2026-06-13
 

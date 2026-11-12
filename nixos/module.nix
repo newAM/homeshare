@@ -224,6 +224,11 @@ in {
       environment = {
         HOMESHARE_CONFIG_FILE = "${configurationFile}";
         FLASK_APP = "homeshare.wsgi:application";
+
+        # gunicorn's control server wants to create ~/.gunicorn, but the
+        # service user's home is the read-only /var/empty. Point HOME at
+        # the StateDirectory so the control socket is writable.
+        HOME = "/var/lib/homeshare";
         # Use the NixOS system CA bundle so that self-signed or private CA
         # certificates trusted via security.pki.certificateFiles are also
         # trusted by Python's ssl module and the requests library.
